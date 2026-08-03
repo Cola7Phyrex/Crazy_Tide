@@ -2862,7 +2862,6 @@ export function advanceExpedition(state, elapsedMs, now = Date.now()) {
   while (nextState.activeExpedition && remaining > 0 && guard < 200) {
     guard += 1;
     const expedition = nextState.activeExpedition;
-    if (expedition.legendaryActionWindow) break;
     let boundary;
     if (expedition.phase === "TRAVELING") {
       const stepDurationMs = getTravelStepDuration(nextState, expedition);

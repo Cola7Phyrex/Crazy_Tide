@@ -140,7 +140,9 @@ import {
 } from "./systems/residents.js";
 import {
   OLIVIA_BLUEPRINT_ID,
+  LEGENDARY_PROTOTYPE_CATALOG,
 } from "./data/legendary-prototype-data.js";
+import { GAME_RULE_ARCHIVE } from "./data/game-rules-data.js";
 import {
   deriveLegendaryBlueprint,
   deriveOliviaBlueprint,
@@ -188,6 +190,7 @@ let blueprintDraft = createBlueprintDraft(
   getOrigin(displayState.base.originId).color,
 );
 let editingBlueprintId = null;
+let selectedLegendaryBlueprintId = null;
 let movingPlacementId = null;
 let prototypeMessage = "";
 let prototypeMessageIsError = false;
@@ -468,6 +471,62 @@ function renderAchievements(state) {
   `;
 }
 
+function getAbilityArchiveSources(abilityId) {
+  const sources = [];
+  for (const item of [...RACES, ...JOBS, ...COMPONENTS]) {
+    if (item.abilities?.includes(abilityId)) sources.push(item.name);
+  }
+  for (const item of LEGENDARY_PROTOTYPE_CATALOG) {
+    if (item.abilities?.includes(abilityId)) sources.push(item.name);
+    if (item.commanderAbility === abilityId) {
+      sources.push(`${item.name}（指挥官）`);
+    }
+  }
+  return Array.from(new Set(sources));
+}
+
+function renderNamedAbilityArchive() {
+  const namedAbilities = Object.entries(ABILITIES).filter(
+    ([, ability]) => !/^异能\s*\d+$/.test(ability.name),
+  );
+  return `
+    <div class="rules-intro">
+      <strong>具名异能采用实际结算说明</strong>
+      <span>这里描述的是当前规则代码真正执行的效果；“异能 1～4”等编号能力仍保留在生物因子详情中，不列入具名异能档案。</span>
+    </div>
+    <div class="rules-card-grid">
+      ${namedAbilities.map(([abilityId, ability]) => {
+        const sources = getAbilityArchiveSources(abilityId);
+        return `
+          <article class="rule-card ability-rule-card">
+            <div class="panel-label">${sources.length ? escapeHtml(sources.join("／")) : "特殊规则"}</div>
+            <h3>${escapeHtml(ability.name)}</h3>
+            <p>${escapeHtml(ability.description)}</p>
+          </article>
+        `;
+      }).join("")}
+    </div>
+  `;
+}
+
+function renderGameRuleArchive() {
+  return `
+    <div class="rules-intro">
+      <strong>默认规则与基础概率</strong>
+      <span>数值均为当前正式实现；领土、异能、结界和测试模式可以在此基础上产生修正。</span>
+    </div>
+    <div class="rules-card-grid">
+      ${GAME_RULE_ARCHIVE.map((rule) => `
+        <article class="rule-card">
+          <div class="panel-label">${escapeHtml(rule.category)}</div>
+          <h3>${escapeHtml(rule.title)}</h3>
+          <p>${escapeHtml(rule.detail)}</p>
+        </article>
+      `).join("")}
+    </div>
+  `;
+}
+
 const compactLogs = renderCompactLogs(loadedState);
 
 app.innerHTML = `
@@ -631,6 +690,8 @@ app.innerHTML = `
               ["events", "事件记录"],
               ["statistics", "数据统计"],
               ["achievements", "成就档案"],
+              ["abilities", "异能图鉴"],
+              ["rules", "游戏规则"],
             ].map(([id, label], index) => `
               <button class="filter-button ${index === 0 ? "is-active" : ""}" data-archive-tab="${id}" role="tab">${label}</button>
             `).join("")}
@@ -655,6 +716,12 @@ app.innerHTML = `
           </article>
           <article class="panel archive-panel" data-archive-panel="achievements" hidden>
             <div data-achievements>${renderAchievements(loadedState ?? displayState)}</div>
+          </article>
+          <article class="panel archive-panel" data-archive-panel="abilities" hidden>
+            ${renderNamedAbilityArchive()}
+          </article>
+          <article class="panel archive-panel" data-archive-panel="rules" hidden>
+            ${renderGameRuleArchive()}
           </article>
         </section>
       </main>
@@ -1585,6 +1652,194 @@ function getPrototypeSignature(state) {
   });
 }
 
+function renderLegendaryBlueprintOptions(state) {
+  return LEGENDARY_PROTOTYPE_CATALOG.filter((definition) =>
+    isLegendaryBlueprintUnlocked(state, definition.id),
+  )
+    .map(
+      (definition) =>
+        `<option value="${definition.id}" ${selectedLegendaryBlueprintId === definition.id ? "selected" : ""}>${escapeHtml(definition.name)}</option>`,
+    )
+    .join("");
+}
+
+function renderLegendaryPrototypeEditor(state) {
+  const definition = LEGENDARY_PROTOTYPE_CATALOG.find(
+    (item) => item.id === selectedLegendaryBlueprintId,
+  );
+  if (!definition || !isLegendaryBlueprintUnlocked(state, definition.id)) {
+    selectedLegendaryBlueprintId = null;
+    return "";
+  }
+  const entity = state.legendaryPrototypes.find(
+    (item) => item.blueprintId === definition.id,
+  );
+  const configuration = getLegendaryConfiguration(state, definition.id);
+  const blueprint = deriveLegendaryBlueprint(state, definition.id, entity);
+  const race = getRace(definition.raceId);
+  const job = getJob(definition.jobId ?? "JOB_NONE");
+  const editable = !configuration.archivedAt && (!entity || entity.status === "READY");
+  const equipmentZone = blueprint.grid.zones.find(
+    (zone) => zone.kind === "LEGENDARY_EQUIPMENT",
+  );
+  const occupiedCells = blueprint.grid.zones.reduce(
+    (sum, zone) => sum + zone.cells.filter(Boolean).length,
+    0,
+  );
+  const totalCells = blueprint.grid.zones.reduce(
+    (sum, zone) => sum + zone.cells.length,
+    0,
+  );
+  const gridZones = blueprint.grid.zones
+    .map((zone) => {
+      const cells = zone.cells
+        .map((instanceId) => {
+          const placement = blueprint.placements.find(
+            (item) => item.instanceId === instanceId,
+          );
+          const component = getComponent(placement?.contentId);
+          return `<button class="grid-cell ${component ? "occupied" : ""}" type="button" disabled title="${escapeHtml(component?.name ?? "空格")}">${component ? escapeHtml(component.name.slice(0, 1)) : "+"}</button>`;
+        })
+        .join("");
+      const zoneLabel =
+        zone.kind === "LEGENDARY_EQUIPMENT"
+          ? "传奇独立装备格"
+          : zone.id === "BASE"
+            ? "基础拓展格"
+            : "附加拓展格";
+      return `
+        <div class="grid-zone ${zone.kind !== "BASE" ? "auxiliary-zone" : ""}">
+          <div class="mini-stat"><span>${zoneLabel}</span><strong>${zone.width}×${zone.height}</strong></div>
+          <div class="grid-editor prototype-grid" style="--grid-columns:${zone.width}" aria-label="${zoneLabel}">${cells}</div>
+        </div>`;
+    })
+    .join("");
+  const installed = blueprint.configurablePlacements.length
+    ? blueprint.configurablePlacements
+        .map((placement) => {
+          const component = getComponent(placement.contentId);
+          return `<div class="installed-factor">
+            <div>
+              <strong>${escapeHtml(component?.name ?? "未知生物因子")}</strong>
+              <small>${placement.zoneId === "LEGENDARY_EQUIPMENT" ? "传奇独立1×1装备格" : "通用拓展格"} · ${component ? componentCostLabel(component) : "—"}</small>
+              ${component ? renderBiofactorEffectSummary(component) : ""}
+              ${component ? renderBiofactorAbilityDetails(component) : ""}
+              <small class="installed-factor-description">${escapeHtml(component?.description ?? "")}</small>
+            </div>
+            <button class="micro-button danger" type="button" data-remove-olivia-component="${placement.instanceId}" ${editable ? "" : "disabled"}>移除</button>
+          </div>`;
+        })
+        .join("")
+    : `<p class="empty-state">尚未安装装备或改造。点击左侧因子即可自动放入合法空位。</p>`;
+  const availableComponents = COMPONENTS.filter((component) =>
+    isContentUnlocked(component, state),
+  );
+  const factors = availableComponents
+    .map((component) => {
+      const canUseEquipmentSlot =
+        component.biofactorType === "EQUIPMENT" &&
+        component.size.width === 1 &&
+        component.size.height === 1 &&
+        !component.providesAuxiliaryZone &&
+        !equipmentZone?.cells.some(Boolean);
+      const installed = blueprint.configurablePlacements.some(
+        (placement) => placement.contentId === component.id,
+      );
+      return `<button
+        class="factor-card factor-card-compact"
+        type="button"
+        data-add-olivia-component="${component.id}"
+        data-olivia-zone="${canUseEquipmentSlot ? "LEGENDARY_EQUIPMENT" : "BASE"}"
+        data-factor-browser-card
+        data-factor-type="${component.biofactorType}"
+        data-factor-effects="${getBiofactorEffectTags(component).join(" ")}"
+        data-factor-search="${escapeHtml(getBiofactorSearchText(component))}"
+        ${installed ? 'data-state="installed"' : ""}
+        ${editable ? "" : "disabled"}
+      >
+        <span class="factor-card-title">◈ ${escapeHtml(component.name)}</span>
+        <span class="factor-compact-size">${component.size.width}×${component.size.height}</span>
+      </button>`;
+    })
+    .join("");
+  const abilities = blueprint.abilityDetails
+    .map(
+      ({ name, description }) =>
+        `<li><strong>[${escapeHtml(name ?? "未知异能")}]</strong><span>${escapeHtml(description ?? "暂无具体说明。")}</span><em>来源：传奇蓝图或已安装因子</em></li>`,
+    )
+    .join("");
+
+  return `
+    <div class="page-heading">
+      <div>
+        <div class="eyebrow">PROTOTYPE // 传奇生物因子构筑</div>
+        <h1>原体编辑器</h1>
+      </div>
+      <span class="status-pill ${blueprint.valid ? "" : "warning"}">${blueprint.valid ? "传奇蓝图合法" : `${blueprint.issues.length}项待处理`}</span>
+    </div>
+    <div class="blueprint-layout">
+      <article class="panel">
+        <div class="panel-header"><div class="panel-label">01 // 身份锁定</div><span class="status-pill">传奇</span></div>
+        <label class="terminal-field"><span>蓝图名称</span><input class="terminal-input" value="${escapeHtml(definition.name)}" disabled></label>
+        <label class="terminal-field">
+          <span>传奇</span>
+          <select class="terminal-select" data-blueprint-legendary>
+            <option value="">普通蓝图</option>
+            ${renderLegendaryBlueprintOptions(state)}
+          </select>
+        </label>
+        <p class="field-help">传奇蓝图固定种族、职业与法术力颜色；装备和改造共用下方拓展格。</p>
+        <label class="terminal-field"><span>种族</span><input class="terminal-input" value="${escapeHtml(race.name)}" disabled></label>
+        <label class="terminal-field"><span>种族法术力</span><input class="terminal-input" value="${definition.colors.map((color) => `[${color}]`).join("")}" disabled></label>
+        <p class="field-help">${escapeHtml(race.description)}</p>
+        ${renderBiofactorEffectSummary(race, "无额外异能")}
+        ${renderBiofactorAbilityDetails(race)}
+        <label class="terminal-field"><span>职业</span><input class="terminal-input" value="${escapeHtml(job.name)}" disabled></label>
+        <p class="field-help">${escapeHtml(job.description)}</p>
+        ${renderBiofactorEffectSummary(job)}
+        ${renderBiofactorAbilityDetails(job)}
+        <div class="panel-label factor-heading">02 // 装备因子与改造因子</div>
+        <div class="factor-browser">
+          <label class="terminal-field factor-search-field"><span>搜索生物因子</span><input class="terminal-input" type="search" value="${escapeHtml(factorSearchQuery)}" placeholder="名称、类别、异能或效果……" data-factor-search></label>
+          <div class="factor-filter-row" role="group" aria-label="因子类型筛选">
+            ${[["ALL", "全部"], ["EQUIPMENT", "装备"], ["MODIFICATION", "改造"]].map(([id, label]) => `<button class="filter-button ${factorTypeFilter === id ? "is-active" : ""}" type="button" data-factor-type-filter="${id}">${label}</button>`).join("")}
+          </div>
+          <div class="factor-filter-row effect-filters" role="group" aria-label="因子效果筛选">
+            ${[["ALL", "全部效果"], ["POWER", "力量"], ["DEFENSE", "防御"], ["HP", "生命"], ["ABILITY", "异能"], ["FIELD", "字段"], ["LEGENDARY", "传奇"]].map(([id, label]) => `<button class="filter-button ${factorEffectFilter === id ? "is-active" : ""}" type="button" data-factor-effect-filter="${id}">${label}</button>`).join("")}
+          </div>
+          <div class="factor-filter-status" data-factor-filter-result role="status"></div>
+        </div>
+        <div class="factor-list">${factors}<div class="empty-state factor-filter-empty" data-factor-filter-empty hidden>没有符合当前搜索与筛选条件的因子。</div></div>
+      </article>
+      <article class="panel">
+        <div class="panel-header"><div><div class="panel-label">EXPANSION GRID // 共用拓展格</div><div class="panel-title">${escapeHtml(definition.name)}</div></div><span class="status-pill">${occupiedCells} / ${totalCells}</span></div>
+        <div class="grid-zones">${gridZones}</div>
+        <p class="field-help">兼容的1×1装备会优先进入传奇独立装备格；其余因子自动放入通用拓展格。</p>
+        <div class="panel-label installed-factor-heading">已安装生物因子详情</div>
+        <div class="installed-list">${installed}</div>
+      </article>
+      <article class="panel">
+        <div class="panel-header"><div class="panel-label">FINAL ATTRIBUTES // 权威计算</div></div>
+        <table class="stat-table"><tbody>
+          <tr><td>颜色</td><td>${definition.colors.map((color) => `[${color}]`).join("")}</td></tr>
+          <tr><td>力量</td><td>${blueprint.stats.power}</td></tr>
+          <tr><td>防御</td><td>${blueprint.stats.defense}</td></tr>
+          <tr><td>生命</td><td>${blueprint.stats.hp}</td></tr>
+          <tr><td>LP</td><td>${blueprint.baseLp} / ${blueprint.maxLp}</td></tr>
+          <tr><td>固定设计成本</td><td>${formatCost(definition.designCost)}</td></tr>
+          <tr><td>已装因子成本</td><td>${formatCost(blueprint.factorCost)}</td></tr>
+        </tbody></table>
+        <div class="panel-label ability-heading">衍生异能</div>
+        <ul class="ability-list">${abilities}</ul>
+        ${blueprint.issues.length ? `<div class="validation-list">${blueprint.issues.map((issue) => `<p>! ${escapeHtml(issue)}</p>`).join("")}</div>` : `<div class="validation-ok">✓ 身份锁定、拓展格与因子配置均合法</div>`}
+        <p class="dialog-message ${prototypeMessageIsError ? "is-error" : ""}" role="status">${escapeHtml(prototypeMessage)}</p>
+        <p class="field-help">传奇蓝图的因子变更会立即保存。${editable ? "" : "当前状态不可编辑。"}</p>
+      </article>
+    </div>
+    ${renderOliviaPanel(state)}
+  `;
+}
+
 function renderOliviaPanel(state) {
   if (!isLegendaryBlueprintUnlocked(state, OLIVIA_BLUEPRINT_ID)) {
     return "";
@@ -1606,45 +1861,6 @@ function renderOliviaPanel(state) {
     commanderTriggers: 0,
     expeditionsCompleted: 0,
   };
-  const installed = blueprint.placements.length
-    ? blueprint.placements
-        .map((placement) => {
-          const component = getComponent(placement.contentId);
-          return `<div class="installed-factor">
-            <div>
-              <strong>${escapeHtml(component?.name ?? "未知生物因子")}</strong>
-              <small>${placement.zoneId === "LEGENDARY_EQUIPMENT" ? "独立1×1装备格" : "2×2通用拓展区"}</small>
-            </div>
-            <button class="micro-button danger" data-remove-olivia-component="${placement.instanceId}">移除</button>
-          </div>`;
-        })
-        .join("")
-    : `<p class="empty-state">尚未安装额外生物因子。</p>`;
-  const baseCells = blueprint.grid.zones
-    .filter((zone) => zone.kind === "BASE")
-    .flatMap((zone) => zone.cells);
-  const equipmentCell = blueprint.grid.zones.find(
-    (zone) => zone.kind === "LEGENDARY_EQUIPMENT",
-  )?.cells[0];
-  const factorButtons = COMPONENTS.filter((component) =>
-    isContentUnlocked(component, state),
-  )
-    .map((component) => {
-      const canUseEquipmentSlot =
-        component.biofactorType === "EQUIPMENT" &&
-        component.size.width === 1 &&
-        component.size.height === 1 &&
-        !equipmentCell;
-      return `<div class="inline-actions">
-        <button class="micro-button" data-add-olivia-component="${component.id}" data-olivia-zone="BASE">基础区：${escapeHtml(component.name)}</button>
-        ${
-          canUseEquipmentSlot
-            ? `<button class="micro-button" data-add-olivia-component="${component.id}" data-olivia-zone="LEGENDARY_EQUIPMENT">装备格</button>`
-            : ""
-        }
-      </div>`;
-    })
-    .join("");
   const career = identity?.career ?? {};
   const statusLabel = configuration.archivedAt
     ? "蓝图已封存"
@@ -1654,7 +1870,7 @@ function renderOliviaPanel(state) {
   return `
     <div class="page-heading compact-heading">
       <div>
-        <div class="eyebrow">LEGENDARY PROTOTYPE // ${OLIVIA_BLUEPRINT_ID}</div>
+        <div class="eyebrow">LEGENDARY STATUS // 实体与身份</div>
         <h2>奥莉薇亚·沃达连</h2>
       </div>
       <span class="status-pill">${statusLabel}</span>
@@ -1682,17 +1898,6 @@ function renderOliviaPanel(state) {
           ${entity && !["DEPLOYED", "COMMANDING"].includes(entity.status) ? `<button class="micro-button danger" data-destroy-legendary-entity="${entity.id}">销毁当前实体</button>` : ""}
           ${!entity && !configuration.archivedAt ? `<button class="micro-button" data-archive-legendary-blueprint="${OLIVIA_BLUEPRINT_ID}">封存传奇蓝图</button>` : ""}
         </div>
-      </article>
-      <article class="blueprint-card">
-        <div class="panel-label">2×2 通用拓展区 ＋ 独立1×1装备格</div>
-        <div class="mini-stat"><span>基础区占用</span><strong>${baseCells.filter(Boolean).length} / 4</strong></div>
-        <div class="mini-stat"><span>独立装备格</span><strong>${equipmentCell ? "已占用" : "空闲"}</strong></div>
-        <div class="installed-list">${installed}</div>
-        ${
-          !entity || entity.status === "READY"
-            ? `<details><summary>安装生物因子</summary>${factorButtons}</details>`
-            : `<p class="field-help">出征或死亡状态不能调整传奇蓝图。</p>`
-        }
       </article>
       <article class="blueprint-card">
         <div class="panel-label">传奇身份档案 · 跨实体永久保存</div>
@@ -2013,6 +2218,22 @@ function renderPrototypeEditor(state, force = false) {
         .join("")
     : `<div class="empty-state large">还没有蓝图。完成上方设计并保存后，将免费实体化第一具原体。</div>`;
 
+  if (selectedLegendaryBlueprintId) {
+    root.innerHTML = `
+      ${renderLegendaryPrototypeEditor(state)}
+      <div class="page-heading compact-heading">
+        <div>
+          <div class="eyebrow">MIRRORWORKS // 镜映品生产</div>
+          <h2>蓝图与待命军团</h2>
+        </div>
+        <span class="status-pill">${state.blueprints.length} / ${state.base.blueprintCap} 蓝图</span>
+      </div>
+      <section class="blueprint-cards">${blueprintCards}</section>
+    `;
+    applyBiofactorFilters(root);
+    return;
+  }
+
   root.innerHTML = `
     <div class="page-heading">
       <div>
@@ -2031,6 +2252,18 @@ function renderPrototypeEditor(state, force = false) {
           <span>蓝图名称</span>
           <input class="terminal-input" data-blueprint-name value="${escapeHtml(blueprintDraft.name)}" maxlength="30">
         </label>
+        ${
+          renderLegendaryBlueprintOptions(state)
+            ? `<label class="terminal-field">
+                <span>传奇</span>
+                <select class="terminal-select" data-blueprint-legendary>
+                  <option value="" selected>普通蓝图</option>
+                  ${renderLegendaryBlueprintOptions(state)}
+                </select>
+              </label>
+              <p class="field-help">选择已解锁的传奇原体蓝图后，种族、职业和法术力颜色将由传奇身份锁定。</p>`
+            : ""
+        }
         <label class="terminal-field">
           <span>种族</span>
           <select class="terminal-select" data-blueprint-race>
@@ -2178,7 +2411,6 @@ function renderPrototypeEditor(state, force = false) {
         }
       </article>
     </div>
-    ${renderOliviaPanel(state)}
     <div class="page-heading compact-heading">
       <div>
         <div class="eyebrow">MIRRORWORKS // 镜映品生产</div>
@@ -4200,12 +4432,12 @@ function renderExpeditionScreen(state, force = false) {
         </div>
         ${
           expedition.legendaryActionWindow
-            ? `<div class="execution-warning">
+              ? `<div class="execution-warning">
                 <strong>传奇异能窗口：血色邀宴</strong>
-                <span>支付2 LP，对当前目标造成2点直接生命伤害，并获得1点远征临时生命（最多3点）。</span>
+                <span>下一回合到来前可支付2 LP，对当前目标造成2点直接生命伤害，并获得1点远征临时生命（最多3点）；战斗不会为选择暂停。</span>
                 <div class="inline-actions">
                   <button class="terminal-button warning" data-activate-olivia-blood-feast>发动 · 2 LP</button>
-                  <button class="terminal-button secondary" data-skip-olivia-blood-feast>放弃本回合</button>
+                  <button class="terminal-button secondary" data-skip-olivia-blood-feast>本回合不发动</button>
                 </div>
               </div>`
             : ""
@@ -4275,7 +4507,7 @@ function applyLogFilter() {
 }
 
 function setArchiveTab(tabId) {
-  if (!["events", "statistics", "achievements"].includes(tabId)) return;
+  if (!["events", "statistics", "achievements", "abilities", "rules"].includes(tabId)) return;
   activeArchiveTab = tabId;
   document.querySelectorAll("[data-archive-tab]").forEach((button) => {
     const active = button.dataset.archiveTab === tabId;
@@ -5056,6 +5288,7 @@ document.addEventListener("click", (event) => {
       (item) => item.id === editBlueprintButton.dataset.editBlueprint,
     );
     if (!blueprint) return;
+    selectedLegendaryBlueprintId = null;
     editingBlueprintId = blueprint.id;
     movingPlacementId = null;
     blueprintDraft = createBlueprintDraftFromBlueprint(blueprint);
@@ -5872,6 +6105,17 @@ document.addEventListener("input", (event) => {
 });
 
 document.addEventListener("change", (event) => {
+  if (event.target.matches("[data-blueprint-legendary]")) {
+    selectedLegendaryBlueprintId = event.target.value || null;
+    editingBlueprintId = null;
+    movingPlacementId = null;
+    prototypeMessage = selectedLegendaryBlueprintId
+      ? "已切换至传奇蓝图；身份字段已锁定，因子配置会立即保存。"
+      : "已切换至普通蓝图编辑。";
+    prototypeMessageIsError = false;
+    renderPrototypeEditor(engine.state, true);
+    return;
+  }
   if (event.target.matches("[data-resident-select]")) {
     try {
       engine.selectResident(event.target.value);
@@ -5962,6 +6206,7 @@ document.querySelector("#new-game-form")?.addEventListener("submit", (event) => 
 
   const formData = new FormData(event.currentTarget);
   engine.startNewGame(formData.get("originId"), formData.get("landId"));
+  selectedLegendaryBlueprintId = null;
   editingBlueprintId = null;
   movingPlacementId = null;
   blueprintDraft = createBlueprintDraft(
@@ -6034,6 +6279,7 @@ document.querySelector("#save-file-input")?.addEventListener("change", async (ev
   if (!file) return;
   try {
     engine.importJson(await file.text());
+    selectedLegendaryBlueprintId = null;
     editingBlueprintId = null;
     movingPlacementId = null;
     setSaveMessage(`已载入：${file.name}`);

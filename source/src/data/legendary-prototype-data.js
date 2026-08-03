@@ -32,7 +32,7 @@ export const LEGENDARY_PROTOTYPE_CATALOG = Object.freeze([
         window: "COMBAT_ROUND_AFTER_HP_DAMAGE",
         lpCost: 2,
         target: "DAMAGED_LIVING_ENEMY",
-        pauseForChoice: true,
+        pauseForChoice: false,
       }),
     ]),
     abilities: Object.freeze([

@@ -576,15 +576,27 @@ export const COMPONENTS = [
 ];
 
 export const ABILITIES = {
-  ABILITY_FLYING: { name: "飞行", description: "可规避缺少飞行或延势的巡逻队；战斗时可能获得高度优势。" },
-  ABILITY_COMBAT_FLIGHT: { name: "战斗飞行", description: "不改变行军遭遇；进入战斗后按飞行规则结算。" },
+  ABILITY_FLYING: {
+    name: "飞行",
+    description:
+      "行军触发巡逻时，若巡逻队既没有飞行也没有延势，且己方未被禁足，则直接避开该次遭遇。战斗开始时，若对手既没有飞行也没有延势，己方本场最大防御与当前防御同时+1。",
+  },
+  ABILITY_COMBAT_FLIGHT: {
+    name: "战斗飞行",
+    description:
+      "行军时不能避开巡逻；进入战斗后视为飞行。若对手既没有飞行也没有延势，己方本场最大防御与当前防御同时+1。",
+  },
   ABILITY_HASTE: { name: "敏捷", description: "远征移动步数减少1，最低为1。" },
   ABILITY_FORESTWALK: { name: "树林行者", description: "目标仍有树林时跳过巡逻判定。" },
   ABILITY_INFILTRATE_2: { name: "渗透2", description: "每个渗透周期提供2点渗透值。" },
   ABILITY_001: { name: "异能 1", description: "安装至少一件装备时力量+1。" },
   ABILITY_002: { name: "异能 2", description: "防御恢复时额外恢复1点；不可叠加。" },
   ABILITY_003: { name: "异能 3", description: "破防或攻击暴露目标时，每把巨剑使生命伤害+1。" },
-  ABILITY_REACH: { name: "延势", description: "能够拦截飞行，并在对抗飞行时力量+1。" },
+  ABILITY_REACH: {
+    name: "延势",
+    description:
+      "行军时可拦截飞行，使对方不能凭飞行避开巡逻；战斗开始时，若对手具有飞行或战斗飞行，己方本场力量+1，并阻止对方获得飞行提供的防御+1。",
+  },
   ABILITY_004: { name: "异能 4", description: "每条胳膊提供独立1×2装备区。" },
   ABILITY_KEEN_HEARING: {
     name: "敏锐听觉",
