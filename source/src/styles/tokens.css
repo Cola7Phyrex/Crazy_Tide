@@ -1,0 +1,108 @@
+@font-face {
+  font-family: "MagicSymbols2021";
+  src: url("../assets/fonts/MagicSymbols2021.otf") format("opentype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark;
+  --bg-0: #030604;
+  --bg-1: #050806;
+  --bg-2: #07120b;
+  --bg-3: #09170e;
+  --bg-raised: #0b1b11;
+  --line-dim: #153c22;
+  --line: #1f7a3a;
+  --line-hot: #32d65d;
+  --text: #c6d2c8;
+  --text-bright: #ecf6ee;
+  --text-dim: #718078;
+  --text-faint: #45584a;
+  --warning: #f2b84b;
+  --danger: #f05252;
+  --info: #38bdf8;
+  --mana-w: #e8e1c5;
+  --mana-u: #38bdf8;
+  --mana-b: #b56cff;
+  --mana-r: #ff5a4f;
+  --mana-g: #39d353;
+  --mana-c: #aab4be;
+  --accent-rgb: 50 214 93;
+  --line-rgb: 31 122 58;
+  --surface-rgb: 5 12 7;
+  --shadow-green: rgb(50 214 93 / 0.14);
+  --shadow-deep: rgba(0, 0, 0, 0.55);
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --header-height: 66px;
+  --footer-height: 34px;
+  --terminal-height: 68px;
+  --font-mono: "PT Mono", "SarasaUiSC-Regular", ui-monospace,
+    SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", monospace;
+}
+
+:root[data-theme="BLOOD_RIFT"] {
+  --bg-0: #080202;
+  --bg-1: #0d0404;
+  --bg-2: #160706;
+  --bg-3: #1d0908;
+  --bg-raised: #240c0a;
+  --line-dim: #4a1816;
+  --line: #992f2b;
+  --line-hot: #ff6258;
+  --text: #d8c4bf;
+  --text-bright: #fff0e9;
+  --text-dim: #927a74;
+  --text-faint: #65504b;
+  --accent-rgb: 255 98 88;
+  --line-rgb: 153 47 43;
+  --surface-rgb: 13 4 4;
+  --shadow-green: rgb(255 98 88 / 0.14);
+}
+
+:root[data-theme="VOID_OBSERVATORY"] {
+  --bg-0: #03030a;
+  --bg-1: #050611;
+  --bg-2: #090b1c;
+  --bg-3: #0c1026;
+  --bg-raised: #10142d;
+  --line-dim: #1b3150;
+  --line: #2f8295;
+  --line-hot: #55d9e8;
+  --text: #c5cedd;
+  --text-bright: #f0f6ff;
+  --text-dim: #77869e;
+  --text-faint: #4b5c76;
+  --accent-rgb: 85 217 232;
+  --line-rgb: 47 130 149;
+  --surface-rgb: 5 6 17;
+  --shadow-green: rgb(85 217 232 / 0.14);
+}
+
+:root[data-theme="RELIC_AMBER"] {
+  --bg-0: #070501;
+  --bg-1: #0d0903;
+  --bg-2: #171005;
+  --bg-3: #1d1508;
+  --bg-raised: #251a09;
+  --line-dim: #493518;
+  --line: #93641d;
+  --line-hot: #f0b64f;
+  --text: #d8cbb2;
+  --text-bright: #fff3d6;
+  --text-dim: #938469;
+  --text-faint: #65583f;
+  --accent-rgb: 240 182 79;
+  --line-rgb: 147 100 29;
+  --surface-rgb: 13 9 3;
+  --shadow-green: rgb(240 182 79 / 0.14);
+}

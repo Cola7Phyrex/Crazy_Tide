@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" fill="#050806"/>
+  <path d="M32 4 60 32 32 60 4 32Z" fill="#07120b" stroke="#32d65d" stroke-width="2"/>
+  <text x="32" y="38" fill="#32d65d" font-family="monospace" font-size="18" text-anchor="middle">CT</text>
+</svg>

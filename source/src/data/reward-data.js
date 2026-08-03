@@ -1,0 +1,297 @@
+export const REWARD_GRADES = Object.freeze({
+  MANA: "A",
+  FIXED: "B",
+  RANDOM: "C",
+  LIMITED_RANDOM: "D",
+});
+
+export const REWARD_DELIVERY_TYPES = Object.freeze({
+  RESOURCE: "RESOURCE",
+  ARCHIVE: "ARCHIVE",
+  RECIPE: "RECIPE",
+  ENTITY: "ENTITY",
+  USAGE_PERMISSION: "USAGE_PERMISSION",
+  SYSTEM_UNLOCK: "SYSTEM_UNLOCK",
+});
+
+export const REWARD_CONTENT_TYPES = Object.freeze({
+  RESOURCE: "RESOURCE",
+  BIOFACTOR: "BIOFACTOR",
+  ARTIFACT: "ARTIFACT",
+  SPELL: "SPELL",
+  ENCHANTMENT: "ENCHANTMENT",
+  BLUEPRINT: "BLUEPRINT",
+  SYSTEM: "SYSTEM",
+  OTHER: "OTHER",
+});
+
+export const GAVONY_FIXED_REWARDS = Object.freeze({
+  ELF: {
+    id: "REWARD_B_GAVONY_ELF",
+    grade: REWARD_GRADES.FIXED,
+    deliveryType: REWARD_DELIVERY_TYPES.RECIPE,
+    contentType: REWARD_CONTENT_TYPES.BIOFACTOR,
+    contentId: "RACE_ELF",
+    unique: true,
+  },
+  PRISMATIC_LENS: {
+    id: "REWARD_B_GAVONY_PRISMATIC_LENS",
+    grade: REWARD_GRADES.FIXED,
+    deliveryType: REWARD_DELIVERY_TYPES.ENTITY,
+    contentType: REWARD_CONTENT_TYPES.ARTIFACT,
+    contentId: "ARTIFACT_PRISMATIC_LENS",
+    unique: true,
+  },
+  THRAN_DYNAMO: {
+    id: "REWARD_B_FIRST_VILLAGE_THRAN_DYNAMO",
+    grade: REWARD_GRADES.FIXED,
+    deliveryType: REWARD_DELIVERY_TYPES.ENTITY,
+    contentType: REWARD_CONTENT_TYPES.ARTIFACT,
+    contentId: "ARTIFACT_THRAN_DYNAMO",
+    unique: true,
+  },
+  BRAIN: {
+    id: "REWARD_B_FIRST_GARRISON_BRAIN",
+    grade: REWARD_GRADES.FIXED,
+    deliveryType: REWARD_DELIVERY_TYPES.RECIPE,
+    contentType: REWARD_CONTENT_TYPES.BIOFACTOR,
+    contentId: "MODIFICATION_BRAIN",
+    unique: true,
+  },
+});
+
+function fixedBiofactor(id, contentId) {
+  return Object.freeze({
+    id,
+    grade: REWARD_GRADES.FIXED,
+    deliveryType: REWARD_DELIVERY_TYPES.RECIPE,
+    contentType: REWARD_CONTENT_TYPES.BIOFACTOR,
+    contentId,
+    unique: true,
+  });
+}
+
+function fixedContent(id, contentId, contentType) {
+  return Object.freeze({
+    id,
+    grade: REWARD_GRADES.FIXED,
+    deliveryType: REWARD_DELIVERY_TYPES.RECIPE,
+    contentType,
+    contentId,
+    unique: true,
+  });
+}
+
+export const INNISTRAD_FIXED_REWARDS = Object.freeze({
+  VAMPIRE: fixedBiofactor(
+    "REWARD_B_STENSIA_INN_VAMPIRE",
+    "RACE_VAMPIRE",
+  ),
+  VAMPIRE_REVELER: fixedBiofactor(
+    "REWARD_B_VOLDAREN_ESTATE_VAMPIRE_REVELER",
+    "MODIFICATION_VAMPIRE_REVELER",
+  ),
+  VAMPIRE_RAIDER: fixedBiofactor(
+    "REWARD_B_VOLDAREN_ESTATE_VAMPIRE_RAIDER",
+    "MODIFICATION_VAMPIRE_RAIDER",
+  ),
+  OLIVIA_VOLDAREN: Object.freeze({
+    id: "REWARD_B_VOLDAREN_ESTATE_OLIVIA_VOLDAREN",
+    grade: REWARD_GRADES.FIXED,
+    deliveryType: REWARD_DELIVERY_TYPES.RECIPE,
+    contentType: REWARD_CONTENT_TYPES.BLUEPRINT,
+    contentId: "LEGENDARY_BLUEPRINT_OLIVIA_VOLDAREN",
+    unique: true,
+  }),
+  WEREWOLF: fixedBiofactor(
+    "REWARD_B_KESSIG_REGION_WEREWOLF",
+    "RACE_WEREWOLF",
+  ),
+  ZOMBIE: fixedBiofactor(
+    "REWARD_B_NEPHALIA_RANCH_ZOMBIE",
+    "RACE_ZOMBIE",
+  ),
+  ROGUE: fixedBiofactor(
+    "REWARD_B_NEPHALIA_ACADEMY_ROGUE",
+    "JOB_ROGUE",
+  ),
+  BEAST: fixedBiofactor(
+    "REWARD_B_KESSIG_WOLF_RUN_BEAST",
+    "RACE_BEAST",
+  ),
+  CLAWS: fixedBiofactor(
+    "REWARD_B_KESSIG_WOLF_RUN_CLAWS",
+    "MODIFICATION_CLAWS",
+  ),
+  RANGERS_LONGBOW: fixedBiofactor(
+    "REWARD_B_KESSIG_HUNTER_HOUSE_RANGERS_LONGBOW",
+    "EQUIPMENT_RANGERS_LONGBOW",
+  ),
+  GREATSWORD: fixedBiofactor(
+    "REWARD_B_THRABEN_BARRACKS_GREATSWORD",
+    "EQUIPMENT_GREATSWORD",
+  ),
+  GARGOYLE: fixedBiofactor(
+    "REWARD_B_THRABEN_GATE_GARGOYLE",
+    "RACE_GARGOYLE",
+  ),
+  SOLDIER: fixedBiofactor(
+    "REWARD_B_THRABEN_BARRACKS_SOLDIER",
+    "JOB_SOLDIER",
+  ),
+  SKAAB_NOTEBOOK: Object.freeze({
+    id: "REWARD_B_NEPHALIA_DROWNYARD_SKAAB_NOTEBOOK",
+    grade: REWARD_GRADES.FIXED,
+    deliveryType: REWARD_DELIVERY_TYPES.ENTITY,
+    contentType: REWARD_CONTENT_TYPES.ARTIFACT,
+    contentId: "ARTIFACT_SKAAB_NOTEBOOK",
+    unique: true,
+  }),
+  SPIRIT: fixedBiofactor(
+    "REWARD_B_MOORLAND_HAUNT_SPIRIT",
+    "RACE_SPIRIT",
+  ),
+  UNSUMMON: fixedContent(
+    "REWARD_B_DROWNYARD_TEMPLE_UNSUMMON",
+    "SPELL_UNSUMMON",
+    REWARD_CONTENT_TYPES.SPELL,
+  ),
+  DEMYSTIFY: fixedContent(
+    "REWARD_B_THRABEN_CHURCH_DEMYSTIFY",
+    "SPELL_DEMYSTIFY",
+    REWARD_CONTENT_TYPES.SPELL,
+  ),
+  GROUNDED: fixedContent(
+    "REWARD_B_KESSIG_HUNTER_HOUSE_GROUNDED",
+    "ENCHANTMENT_GROUNDED",
+    REWARD_CONTENT_TYPES.ENCHANTMENT,
+  ),
+  TASTE_FOR_MAYHEM: fixedContent(
+    "REWARD_B_GEIER_REACH_SANITARIUM_TASTE_FOR_MAYHEM",
+    "ENCHANTMENT_TASTE_FOR_MAYHEM",
+    REWARD_CONTENT_TYPES.ENCHANTMENT,
+  ),
+  VIRTUES_RUIN: fixedContent(
+    "REWARD_B_STENSIA_BLOODHALL_VIRTUES_RUIN",
+    "ENCHANTMENT_VIRTUES_RUIN",
+    REWARD_CONTENT_TYPES.ENCHANTMENT,
+  ),
+  SPACE_ANCHOR: Object.freeze({
+    id: "REWARD_B_HELVAULT_SPACE_ANCHOR",
+    grade: REWARD_GRADES.FIXED,
+    deliveryType: REWARD_DELIVERY_TYPES.ENTITY,
+    contentType: REWARD_CONTENT_TYPES.ARTIFACT,
+    contentId: "ARTIFACT_SPACE_ANCHOR",
+    unique: true,
+  }),
+  ELBRUS_BINDING_BLADE: Object.freeze({
+    id: "REWARD_B_HELVAULT_ELBRUS_BINDING_BLADE",
+    grade: REWARD_GRADES.FIXED,
+    deliveryType: REWARD_DELIVERY_TYPES.ENTITY,
+    contentType: REWARD_CONTENT_TYPES.BIOFACTOR,
+    contentId: "EQUIPMENT_ELBRUS_BINDING_BLADE",
+    unique: true,
+  }),
+});
+
+export const TERRITORY_FIXED_REWARDS = Object.freeze({
+  TERRITORY_STENSIA_INN: [INNISTRAD_FIXED_REWARDS.VAMPIRE],
+  TERRITORY_VOLDAREN_ESTATE: [
+    INNISTRAD_FIXED_REWARDS.VAMPIRE_REVELER,
+    INNISTRAD_FIXED_REWARDS.VAMPIRE_RAIDER,
+    INNISTRAD_FIXED_REWARDS.OLIVIA_VOLDAREN,
+  ],
+  TERRITORY_NEPHALIA_DROWNYARD: [
+    INNISTRAD_FIXED_REWARDS.SKAAB_NOTEBOOK,
+  ],
+  TERRITORY_DROWNYARD_TEMPLE: [
+    INNISTRAD_FIXED_REWARDS.UNSUMMON,
+  ],
+  TERRITORY_NEPHALIA_RANCH: [
+    INNISTRAD_FIXED_REWARDS.ZOMBIE,
+  ],
+  TERRITORY_NEPHALIA_ACADEMY: [
+    INNISTRAD_FIXED_REWARDS.ROGUE,
+  ],
+  TERRITORY_KESSIG_HUNTER_HOUSE: [
+    INNISTRAD_FIXED_REWARDS.RANGERS_LONGBOW,
+    INNISTRAD_FIXED_REWARDS.GROUNDED,
+  ],
+  TERRITORY_KESSIG_WOLF_RUN: [
+    INNISTRAD_FIXED_REWARDS.BEAST,
+    INNISTRAD_FIXED_REWARDS.CLAWS,
+  ],
+  TERRITORY_GEIER_REACH_SANITARIUM: [
+    INNISTRAD_FIXED_REWARDS.TASTE_FOR_MAYHEM,
+  ],
+  TERRITORY_STENSIA_BLOODHALL: [
+    INNISTRAD_FIXED_REWARDS.VIRTUES_RUIN,
+  ],
+  TERRITORY_MOORLAND_HAUNT: [
+    INNISTRAD_FIXED_REWARDS.SPIRIT,
+  ],
+  TERRITORY_THRABEN_GATE_DISTRICT: [
+    INNISTRAD_FIXED_REWARDS.GARGOYLE,
+  ],
+  TERRITORY_THRABEN_BARRACKS_DISTRICT: [
+    INNISTRAD_FIXED_REWARDS.SOLDIER,
+    INNISTRAD_FIXED_REWARDS.GREATSWORD,
+  ],
+  TERRITORY_THRABEN_CHURCH_DISTRICT: [
+    INNISTRAD_FIXED_REWARDS.DEMYSTIFY,
+  ],
+  TERRITORY_HELVAULT: [
+    INNISTRAD_FIXED_REWARDS.SPACE_ANCHOR,
+    INNISTRAD_FIXED_REWARDS.ELBRUS_BINDING_BLADE,
+  ],
+});
+
+export const REGION_COMPLETION_REWARDS = Object.freeze({
+  REGION_KESSIG: Object.freeze({
+    requiredTerritoryIds: [
+      "TERRITORY_KESSIG_HUNTER_HOUSE",
+      "TERRITORY_KESSIG_WOLF_RUN",
+    ],
+    rewards: [INNISTRAD_FIXED_REWARDS.WEREWOLF],
+  }),
+});
+
+export const LIMITED_RANDOM_REWARD_CATALOG = Object.freeze([
+  {
+    id: "REWARD_D_MOUNTAIN_GOBLIN",
+    grade: REWARD_GRADES.LIMITED_RANDOM,
+    deliveryType: REWARD_DELIVERY_TYPES.RECIPE,
+    contentType: REWARD_CONTENT_TYPES.BIOFACTOR,
+    contentId: "RACE_GOBLIN",
+    unique: true,
+    drawWeight: 1,
+    requiredTags: ["LAND_MOUNTAIN"],
+    excludedTags: [],
+  },
+]);
+
+export function createManaRewardDefinition(id, resources, options = {}) {
+  return {
+    id,
+    grade: REWARD_GRADES.MANA,
+    deliveryType: REWARD_DELIVERY_TYPES.RESOURCE,
+    contentType: REWARD_CONTENT_TYPES.RESOURCE,
+    resources: { ...resources },
+    unique: false,
+    drawWeight: 1,
+    ...options,
+  };
+}
+
+export function createBiofactorRewardDefinition(id, contentId, options = {}) {
+  return {
+    id,
+    grade: REWARD_GRADES.FIXED,
+    deliveryType: REWARD_DELIVERY_TYPES.RECIPE,
+    contentType: REWARD_CONTENT_TYPES.BIOFACTOR,
+    contentId,
+    unique: true,
+    drawWeight: 1,
+    ...options,
+  };
+}
