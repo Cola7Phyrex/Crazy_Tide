@@ -2817,7 +2817,7 @@ body.mana-display-letters .mana-choice-letter {
 }
 
 .startup-cover-frame,
-.startup-ascii,
+.startup-void-art,
 .startup-boot-log,
 .startup-authority,
 .startup-actions,
@@ -2834,16 +2834,23 @@ body.mana-display-letters .mana-choice-letter {
   letter-spacing: 0.14em;
 }
 
-.startup-ascii {
+.startup-void-art {
   align-self: center;
-  margin: 18px auto 14px;
+  width: clamp(220px, 42vw, 330px);
+  aspect-ratio: 1;
+  margin: 14px auto 10px;
   overflow: hidden;
-  color: var(--line-hot);
-  text-shadow: 0 0 9px rgb(var(--accent-rgb) / 0.38);
-  font: 500 11px/1.3 var(--font-mono);
-  letter-spacing: 0;
   opacity: 0;
-  animation: startup-ascii-in 0.7s steps(8, end) 0.16s forwards;
+  animation: startup-art-in 0.9s steps(8, end) 0.16s forwards;
+}
+
+.startup-void-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  mix-blend-mode: screen;
+  filter: contrast(1.08) brightness(0.94) drop-shadow(0 0 12px rgb(var(--accent-rgb) / 0.12));
 }
 
 .startup-boot-log {
@@ -2915,7 +2922,7 @@ body.mana-display-letters .mana-choice-letter {
 }
 
 .startup-cover-shell.is-skipped::before,
-.startup-cover-shell.is-skipped .startup-ascii,
+.startup-cover-shell.is-skipped .startup-void-art,
 .startup-cover-shell.is-skipped .startup-boot-row,
 .startup-cover-shell.is-skipped .startup-authority,
 .startup-cover-shell.is-skipped .startup-actions,
@@ -2926,7 +2933,7 @@ body.mana-display-letters .mana-choice-letter {
 }
 
 body.effects-off .startup-cover-shell::before,
-body.effects-off .startup-ascii,
+body.effects-off .startup-void-art,
 body.effects-off .startup-boot-row,
 body.effects-off .startup-authority,
 body.effects-off .startup-actions,
@@ -2941,11 +2948,11 @@ body.effects-off .startup-skip-hint {
   to { transform: translateY(520%); }
 }
 
-@keyframes startup-ascii-in {
-  0% { opacity: 0; filter: blur(2px); }
+@keyframes startup-art-in {
+  0% { opacity: 0; filter: blur(3px); transform: scale(0.985); }
   35% { opacity: 0.8; }
   46% { opacity: 0.22; }
-  58%, 100% { opacity: 1; filter: none; }
+  58%, 100% { opacity: 1; filter: none; transform: scale(1); }
 }
 
 @keyframes startup-line-in {

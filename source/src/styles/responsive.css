@@ -375,10 +375,9 @@
     padding: 14px 12px 16px;
   }
 
-  .startup-ascii {
-    margin-block: 14px 12px;
-    font-size: clamp(6px, 1.7vw, 8px);
-    line-height: 1.32;
+  .startup-void-art {
+    width: min(66vw, 250px);
+    margin-block: 10px 8px;
   }
 
   .startup-boot-row {

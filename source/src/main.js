@@ -8,6 +8,7 @@ import manaGreenUrl from "./assets/mana-symbols/G.svg";
 import manaColorlessUrl from "./assets/mana-symbols/C.svg";
 import lilithPortraitUrl from "./assets/residents/lilith-subspace-engraving.png";
 import oliviaPortraitUrl from "./assets/residents/olivia-voldaren-engraving.png";
+import startupVoidExileUrl from "./assets/startup/cosmic-void-exile.webp";
 import {
   navItems,
 } from "./data/mock-data.js";
@@ -718,28 +719,12 @@ app.innerHTML = `
           <span>SUBSPACE BOOTSTRAP</span>
           <span>PROTOCOL // 07</span>
         </div>
-        <pre class="startup-ascii" aria-hidden="true">               .         *         .
-                   &#92;     |     /
-            *       &#92;    |    /       .
-                     &#92;   |   /
-          .------------&#92;-|-/------------.
-                       &#92; | /
-                .-------[O]-------.
-              .'        /|&#92;        '.
-             /         / | &#92;         &#92;
-            |                         |
-            |        .-------.        |
-            |       /    |    &#92;       |
-            |       &#92;    |    /       |
-            |        '-------'        |
-             &#92;        _______        /
-               '.___  /_|_|_&#92;  ___.'
-                   &#92;     |     /
-                    &#92;    |    /
-             ________&#92;___|___/________
-            /                         &#92;
-           /                           &#92;
-          /_____________________________&#92;</pre>
+        <figure class="startup-void-art">
+          <img
+            src="${startupVoidExileUrl}"
+            alt="一个被放逐者独自漂浮在现实宇宙破裂边界之外"
+          >
+        </figure>
         <div class="startup-boot-log" aria-label="启动状态">
           <div class="startup-boot-row" style="--boot-delay: 0.72s">
             <span>SEAL INTEGRITY</span><i></i><strong>100%</strong>
