@@ -244,7 +244,7 @@ const resourceMarkup = COLOR_ORDER
           <span class="mana-symbol">[${id}]</span>
           <span>${name}</span>
         </div>
-        <div>
+        <div class="mana-amount">
           <span class="mana-value" data-resource-value>${value.toLocaleString("zh-CN")}</span>
           <span class="mana-cap">/<span data-resource-cap>${cap.toLocaleString("zh-CN")}</span></span>
         </div>
@@ -262,9 +262,9 @@ const navMarkup = (mobile = false) =>
     .map(
       ({ id, key, label, icon }) => `
         <button class="nav-item ${id === "base" ? "is-active" : ""}" data-route="${id}"
-          aria-label="${label}" ${mobile ? "" : `title="${key} — ${label}"`}>
+          aria-label="${label}" title="${mobile ? label : `${key} — ${label}`}">
           <span class="nav-icon" aria-hidden="true">${icon}</span>
-          <span>${label}</span>
+          <span class="nav-label">${label}</span>
           <span class="nav-key">${key}</span>
         </button>
       `,
@@ -710,7 +710,13 @@ app.innerHTML = `
       <span data-game-id>GAME ID: —</span>
       <span>1–9 切换页面 · ? 帮助</span>
     </footer>
-    <nav class="mobile-nav" aria-label="移动端主导航">${navMarkup(true)}</nav>
+    <nav class="mobile-nav" aria-label="移动端主导航">
+      <button class="mobile-nav-toggle" type="button" data-mobile-nav-toggle aria-expanded="false" aria-label="展开菜单" title="菜单">
+        <span class="nav-icon" aria-hidden="true">☰</span>
+        <span class="nav-label">菜单</span>
+      </button>
+      ${navMarkup(true)}
+    </nav>
 
     <dialog class="terminal-dialog startup-cover-dialog" id="startup-cover-dialog" aria-labelledby="startup-cover-title">
       <div class="startup-cover-shell" tabindex="-1">
@@ -1017,6 +1023,15 @@ let activeRoute = "base";
 let activeLogFilter = "全部";
 let activeArchiveTab = "events";
 let pageIsPaused = document.hidden;
+
+function setMobileNavExpanded(expanded) {
+  const nav = document.querySelector(".mobile-nav");
+  const toggle = nav?.querySelector("[data-mobile-nav-toggle]");
+  if (!nav || !toggle) return;
+  nav.classList.toggle("is-expanded", expanded);
+  toggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+  toggle.setAttribute("aria-label", expanded ? "收起菜单" : "展开菜单");
+}
 
 function setRoute(route) {
   if (!navItems.some((item) => item.id === route)) return;
@@ -3126,6 +3141,7 @@ function renderExpeditionResultSummary(last) {
   const unlocks = [
     ...(result.unlockedBiofactors ?? []),
     ...(result.unlockedArtifacts ?? []),
+    ...(result.unlockedContent ?? []),
   ];
   return `
     <div class="result-metrics">
@@ -4558,6 +4574,14 @@ function downloadSave() {
 }
 
 document.addEventListener("click", (event) => {
+  const mobileNavToggle = event.target.closest("[data-mobile-nav-toggle]");
+  if (mobileNavToggle) {
+    setMobileNavExpanded(
+      !mobileNavToggle.closest(".mobile-nav")?.classList.contains("is-expanded"),
+    );
+    return;
+  }
+
   const acknowledgeAchievementButton = event.target.closest(
     "[data-acknowledge-achievement]",
   );
@@ -4818,6 +4842,7 @@ document.addEventListener("click", (event) => {
   const routeButton = event.target.closest("[data-route]");
   if (routeButton) {
     setRoute(routeButton.dataset.route);
+    if (routeButton.closest(".mobile-nav")) setMobileNavExpanded(false);
     return;
   }
 
@@ -6029,6 +6054,10 @@ document.addEventListener("keydown", (event) => {
   }
   if (event.key === "?") {
     setTerminalResponse(terminalHelpText(), "SYSTEM // 指令索引");
+    return;
+  }
+  if (event.key === "Escape") {
+    setMobileNavExpanded(false);
     return;
   }
   const item = navItems.find((navItem) => navItem.key === event.key);

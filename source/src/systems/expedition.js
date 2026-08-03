@@ -1047,6 +1047,21 @@ function finishExpedition(
     unlockedArtifacts: workingState.artifacts.filter(
       (id) => !(expedition.startingArtifacts ?? []).includes(id),
     ),
+    unlockedContent: Array.isArray(expedition.startingContentUnlocks)
+      ? (workingState.rewardProgress?.unlockedContentIds ?? []).filter(
+          (id) => !expedition.startingContentUnlocks.includes(id),
+        )
+      : Array.from(
+          new Set(
+            (workingState.rewardProgress?.ledger ?? [])
+              .filter(
+                (record) =>
+                  record.contentId &&
+                  record.acquiredAt >= (expedition.startedAt ?? now),
+              )
+              .map((record) => record.contentId),
+          ),
+        ),
   };
   const returningLegendaryBlueprint = expedition.legendaryPrototypeId
     ? deriveLegendaryBlueprint(
@@ -1869,6 +1884,9 @@ export function startExpedition(
       ...preparedState.unlockedBiofactors,
     ],
     startingArtifacts: [...preparedState.artifacts],
+    startingContentUnlocks: [
+      ...(preparedState.rewardProgress?.unlockedContentIds ?? []),
+    ],
     logEntries: [
       {
         id: createId("EXPLOG", now),

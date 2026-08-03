@@ -38,6 +38,13 @@
   font-variant-numeric: tabular-nums;
 }
 
+.mana-amount {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  white-space: nowrap;
+}
+
 .mana-cap {
   color: var(--text-faint);
   font-size: 10px;

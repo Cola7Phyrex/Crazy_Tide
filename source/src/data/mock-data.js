@@ -11,11 +11,11 @@ export const navItems = [
   { id: "base", key: "1", label: "基地", icon: "⌂" },
   { id: "prototype", key: "2", label: "原体", icon: "◇" },
   { id: "biofactors", key: "3", label: "生物因子", icon: "◈" },
-  { id: "artifacts", key: "4", label: "神器", icon: "⬡" },
-  { id: "enchantments", key: "5", label: "结界", icon: "◉" },
-  { id: "spells", key: "6", label: "法术", icon: "✦" },
-  { id: "map", key: "7", label: "地图", icon: "⌘" },
-  { id: "expedition", key: "8", label: "远征", icon: "↗" },
+  { id: "map", key: "4", label: "地图", icon: "⌘" },
+  { id: "expedition", key: "5", label: "远征", icon: "↗" },
+  { id: "artifacts", key: "6", label: "神器", icon: "⬡" },
+  { id: "enchantments", key: "7", label: "结界", icon: "◉" },
+  { id: "spells", key: "8", label: "法术", icon: "✦" },
   { id: "logs", key: "9", label: "记录", icon: "≡" },
 ];
 

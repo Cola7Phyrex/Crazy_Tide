@@ -87,11 +87,16 @@ export class GameEngine {
     if (!loadedState) return null;
 
     const now = this.now();
+    const offlineElapsed = Math.max(
+      0,
+      now - (loadedState.lastSavedAt ?? now),
+    );
     const settlement = settleEconomy(loadedState, now);
     this.state = settleLegendaryRest(
       settleProduction(settlement.state, now).state,
       now,
     );
+    this.advanceExpeditionClock(offlineElapsed, now);
 
     if (
       settlement.elapsedMs >= OFFLINE_LOG_THRESHOLD_MS &&
@@ -122,6 +127,18 @@ export class GameEngine {
     this.persist(now);
     this.emit();
     return this.state;
+  }
+
+  advanceExpeditionClock(elapsedMs, now) {
+    const expedition = advanceExpedition(this.state, elapsedMs, now);
+    this.state = expedition.state;
+    for (const event of expedition.events) {
+      this.state = appendEvent(
+        this.state,
+        createGameEvent(event.type, event.payload, now),
+      );
+    }
+    return expedition;
   }
 
   archiveRegion(regionId) {
@@ -282,14 +299,7 @@ export class GameEngine {
       ? 0
       : Math.max(0, now - this.lastActiveTickAt);
     this.lastActiveTickAt = now;
-    const expedition = advanceExpedition(this.state, activeElapsed, now);
-    this.state = expedition.state;
-    for (const event of expedition.events) {
-      this.state = appendEvent(
-        this.state,
-        createGameEvent(event.type, event.payload, now),
-      );
-    }
+    const expedition = this.advanceExpeditionClock(activeElapsed, now);
 
     if (
       expedition.critical ||
@@ -304,9 +314,13 @@ export class GameEngine {
 
   settleAfterPause(now = this.now()) {
     if (!this.state) return null;
+    const pausedElapsed = this.lastActiveTickAt === null
+      ? 0
+      : Math.max(0, now - this.lastActiveTickAt);
     const settlement = settleEconomy(this.state, now);
     const production = settleProduction(settlement.state, now);
     this.state = settleLegendaryRest(production.state, now);
+    this.advanceExpeditionClock(pausedElapsed, now);
     this.lastActiveTickAt = now;
 
     if (
@@ -1072,10 +1086,16 @@ export class GameEngine {
   importJson(jsonText) {
     const now = this.now();
     const importedState = this.storage.import(jsonText);
+    const offlineElapsed = Math.max(
+      0,
+      now - (importedState.lastSavedAt ?? now),
+    );
     const settlement = settleEconomy(importedState, now);
     const production = settleProduction(settlement.state, now);
+    this.state = production.state;
+    this.advanceExpeditionClock(offlineElapsed, now);
     this.state = appendEvent(
-      production.state,
+      this.state,
       createGameEvent("SAVE_IMPORTED", {}, now),
     );
     this.lastActiveTickAt = now;
