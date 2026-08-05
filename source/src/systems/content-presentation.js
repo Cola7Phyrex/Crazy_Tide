@@ -7,7 +7,7 @@ import {
 import { getLand, getOrigin } from "../data/game-data.js";
 import { LEGENDARY_PROTOTYPE_CATALOG } from "../data/legendary-prototype-data.js";
 import {
-  ABILITIES,
+  getAbilityDefinition,
   getComponent,
   getJob,
   getRace,
@@ -39,7 +39,7 @@ const GENERATOR_VERSION_NAMES = Object.freeze({
 });
 
 export function getAbilityDisplayName(abilityId) {
-  return ABILITIES[abilityId]?.name ?? "未知异能";
+  return getAbilityDefinition(abilityId)?.name ?? "未知异能";
 }
 
 export function getCommandDisplayName(command) {

@@ -1,6 +1,6 @@
 import {
-  ABILITIES,
   BIOFACTOR_TYPES,
+  getAbilityDefinition,
   getComponent,
   getJob,
   getRace,
@@ -457,7 +457,7 @@ export function deriveBlueprint(draft, state = null) {
     abilities,
     abilityDetails: [...new Set(abilities)].map((id) => ({
       id,
-      ...ABILITIES[id],
+      ...getAbilityDefinition(id),
     })),
     stats,
     grid: {

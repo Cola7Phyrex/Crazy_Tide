@@ -1,6 +1,6 @@
 import {
-  ABILITIES,
   BIOFACTOR_TYPES,
+  getAbilityDefinition,
   getComponent,
   isContentUnlocked,
 } from "../data/prototype-data.js";
@@ -348,7 +348,10 @@ export function deriveLegendaryBlueprint(state, blueprintId, entity = null) {
     configurablePlacements: structuredClone(configuration.placements ?? []),
     stats,
     abilities: [...new Set(abilities)],
-    abilityDetails: [...new Set(abilities)].map((id) => ({ id, ...ABILITIES[id] })),
+    abilityDetails: [...new Set(abilities)].map((id) => ({
+      id,
+      ...getAbilityDefinition(id),
+    })),
     baseLp: definition.lp.base + growth.baseLp,
     maxLp: definition.lp.max + growth.maxLp,
     factorCost,

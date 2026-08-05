@@ -578,81 +578,118 @@ export const COMPONENTS = [
 export const ABILITIES = {
   ABILITY_FLYING: {
     name: "飞行",
+    keyword: true,
     description:
       "行军触发巡逻时，若巡逻队既没有飞行也没有延势，且己方未被禁足，则直接避开该次遭遇。战斗开始时，若对手既没有飞行也没有延势，己方本场最大防御与当前防御同时+1。",
   },
   ABILITY_COMBAT_FLIGHT: {
-    name: "战斗飞行",
+    name: "异能 9",
     description:
       "行军时不能避开巡逻；进入战斗后视为飞行。若对手既没有飞行也没有延势，己方本场最大防御与当前防御同时+1。",
   },
-  ABILITY_HASTE: { name: "敏捷", description: "远征移动步数减少1，最低为1。" },
-  ABILITY_FORESTWALK: { name: "树林行者", description: "目标仍有树林时跳过巡逻判定。" },
-  ABILITY_INFILTRATE_2: { name: "渗透2", description: "每个渗透周期提供2点渗透值。" },
+  ABILITY_HASTE: { name: "敏捷", keyword: true, description: "远征移动步数减少1，最低为1。" },
+  ABILITY_FORESTWALK: {
+    name: "树林行者",
+    keyword: true,
+    description: "目标仍有树林时跳过巡逻判定。",
+  },
+  ABILITY_INFILTRATE_X: {
+    name: "渗透X",
+    keyword: true,
+    variable: "X",
+    description: "每个渗透周期提供X点渗透值。",
+  },
   ABILITY_001: { name: "异能 1", description: "安装至少一件装备时力量+1。" },
   ABILITY_002: { name: "异能 2", description: "防御恢复时额外恢复1点；不可叠加。" },
   ABILITY_003: { name: "异能 3", description: "破防或攻击暴露目标时，每把巨剑使生命伤害+1。" },
   ABILITY_REACH: {
     name: "延势",
+    keyword: true,
     description:
       "行军时可拦截飞行，使对方不能凭飞行避开巡逻；战斗开始时，若对手具有飞行或战斗飞行，己方本场力量+1，并阻止对方获得飞行提供的防御+1。",
   },
   ABILITY_004: { name: "异能 4", description: "每条胳膊提供独立1×2装备区。" },
   ABILITY_KEEN_HEARING: {
-    name: "敏锐听觉",
+    name: "异能 5",
     description: "渗透暴露率减少2个百分点。",
     infiltrationExposureModifier: -0.02,
   },
   ABILITY_VAMPIRE_BLOODTHIRST: {
     name: "嗜血",
+    keyword: true,
     description: "每场战斗第一次造成生命伤害后力量+1；每次远征最多2层，并参与坚守伤害。",
   },
   ABILITY_VAMPIRE_WHITE_DAMAGE_PLUS_1: {
-    name: "白色来源易伤",
+    name: "异能 6",
     description: "受到颜色包含白色的来源造成伤害时，该次伤害+1。",
   },
   ABILITY_VAMPIRE_SCALE_LIMIT: {
-    name: "稀少血裔",
+    name: "异能 7",
     description: "最多购买5点军团生命；每点军团生命生成2名复制体。",
   },
   ABILITY_WEREWOLF_ENRAGE: {
     name: "激怒",
+    keyword: true,
     description: "每次实际失去生命后，本场战斗力量+1。",
   },
   ABILITY_SOLDIER_FORM_RANKS: {
-    name: "结阵",
+    name: "异能 10",
     description: "战斗开始时规模生命不少于5，本场力量+2、防御+1。",
   },
   ABILITY_SOLDIER_REINFORCE: {
-    name: "补员",
+    name: "异能 11",
     description: "战斗开始时规模生命不足5，获得1点远征临时规模生命。",
   },
   ABILITY_INFILTRATION_EXPOSURE_PLUS_15: {
-    name: "尸嵌暴露",
+    name: "异能 8",
     description: "每轮渗透暴露率增加15个百分点。",
     infiltrationExposureModifier: 0.15,
   },
+};
+
+export const SPECIAL_ABILITIES = {
   ABILITY_OLIVIA_BLOOD_FEAST: {
     name: "血色邀宴",
+    special: true,
     description:
       "单体出击时，普通攻击造成有效生命伤害且双方存活后可支付2 LP：对同一目标造成2点黑红直接生命伤害，并获得1点远征临时生命；每回合一次，临时生命最多3点。",
   },
   ABILITY_OLIVIA_DRINK_THE_LAST: {
     name: "饮尽余温",
+    special: true,
     description:
       "单体出击时以普通攻击或血色邀宴直接消灭敌人后获得1 LP。",
   },
   ABILITY_OLIVIA_COMMANDER: {
     name: "沃达连指挥",
+    special: true,
     description:
       "受指挥军团本次远征首次造成有效生命伤害后，在剩余战斗中力量+1；不修改静态力量且不参与坚守伤害。",
   },
   ABILITY_ELBRUS_TRANSFORM: {
     name: "解缚",
+    special: true,
     description:
       "首次对敌人造成实际生命伤害后，装备者被消灭并由解缚威森格替代；即使装备者在同一次伤害交换中死亡也会触发。",
   },
 };
+
+export function getAbilityDefinition(abilityId, { template = false } = {}) {
+  const infiltrationMatch = abilityId?.match(/^ABILITY_INFILTRATE_(\d+)$/);
+  if (infiltrationMatch) {
+    const value = Number(infiltrationMatch[1]);
+    const definition = ABILITIES.ABILITY_INFILTRATE_X;
+    if (template) return definition;
+    return {
+      ...definition,
+      name: `渗透${value}`,
+      description: `每个渗透周期提供${value}点渗透值。`,
+      value,
+      templateId: "ABILITY_INFILTRATE_X",
+    };
+  }
+  return ABILITIES[abilityId] ?? SPECIAL_ABILITIES[abilityId];
+}
 
 export function getRace(id) {
   return RACES.find((race) => race.id === id);

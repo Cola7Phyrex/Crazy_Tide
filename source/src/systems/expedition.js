@@ -20,7 +20,7 @@ import {
   createManaRewardDefinition,
 } from "../data/reward-data.js";
 import { grantReward } from "./rewards.js";
-import { ABILITIES } from "../data/prototype-data.js";
+import { getAbilityDefinition } from "../data/prototype-data.js";
 import { getContentDisplayName } from "./content-presentation.js";
 import {
   createBlueprintDraftFromBlueprint,
@@ -2683,7 +2683,7 @@ function resolveInfiltrationBoundary(state, expedition, now) {
   const { blueprint } = getExpeditionEntities(nextState, nextExpedition);
   const biofactorExposureModifier = blueprint.abilities.reduce(
     (sum, abilityId) =>
-      sum + (ABILITIES[abilityId]?.infiltrationExposureModifier ?? 0),
+      sum + (getAbilityDefinition(abilityId)?.infiltrationExposureModifier ?? 0),
     0,
   );
   const exposureRate = Math.min(
@@ -2828,7 +2828,7 @@ export function activateLegendaryAbility(
 export function skipOliviaBloodFeast(state, now = Date.now()) {
   const expedition = state.activeExpedition;
   if (!expedition?.legendaryActionWindow) {
-    throw new Error("当前没有可跳过的传奇异能窗口");
+    throw new Error("当前没有可跳过的专属能力窗口");
   }
   return {
     ...state,

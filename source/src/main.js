@@ -30,6 +30,7 @@ import {
   COMPONENTS,
   JOBS,
   RACES,
+  getAbilityDefinition,
   getComponent,
   getJob,
   getRace,
@@ -471,40 +472,49 @@ function renderAchievements(state) {
   `;
 }
 
-function getAbilityArchiveSources(abilityId) {
-  const sources = [];
-  for (const item of [...RACES, ...JOBS, ...COMPONENTS]) {
-    if (item.abilities?.includes(abilityId)) sources.push(item.name);
+function matchesKeywordAbility(contentAbilityId, keywordAbilityId) {
+  if (keywordAbilityId === "ABILITY_INFILTRATE_X") {
+    return /^ABILITY_INFILTRATE_\d+$/.test(contentAbilityId);
   }
-  for (const item of LEGENDARY_PROTOTYPE_CATALOG) {
-    if (item.abilities?.includes(abilityId)) sources.push(item.name);
-    if (item.commanderAbility === abilityId) {
-      sources.push(`${item.name}（指挥官）`);
-    }
-  }
-  return Array.from(new Set(sources));
+  return contentAbilityId === keywordAbilityId;
 }
 
-function renderNamedAbilityArchive() {
+function isKeywordAbilityUnlocked(state, keywordAbilityId) {
+  const unlockedContent = [...RACES, ...JOBS, ...COMPONENTS].filter((item) =>
+    isContentUnlocked(item, state),
+  );
+  if (
+    unlockedContent.some((item) =>
+      item.abilities?.some((abilityId) =>
+        matchesKeywordAbility(abilityId, keywordAbilityId),
+      ),
+    )
+  ) {
+    return true;
+  }
+  return LEGENDARY_PROTOTYPE_CATALOG.some(
+    (item) =>
+      isLegendaryBlueprintUnlocked(state, item.id) &&
+      item.abilities?.some((abilityId) =>
+        matchesKeywordAbility(abilityId, keywordAbilityId),
+      ),
+  );
+}
+
+function renderNamedAbilityArchive(state) {
   const namedAbilities = Object.entries(ABILITIES).filter(
-    ([, ability]) => !/^异能\s*\d+$/.test(ability.name),
+    ([abilityId, ability]) =>
+      ability.keyword === true &&
+      isKeywordAbilityUnlocked(state, abilityId),
   );
   return `
-    <div class="rules-intro">
-      <strong>具名异能采用实际结算说明</strong>
-      <span>这里描述的是当前规则代码真正执行的效果；“异能 1～4”等编号能力仍保留在生物因子详情中，不列入具名异能档案。</span>
-    </div>
     <div class="rules-card-grid">
-      ${namedAbilities.map(([abilityId, ability]) => {
-        const sources = getAbilityArchiveSources(abilityId);
-        return `
+      ${namedAbilities.length ? namedAbilities.map(([, ability]) => `
           <article class="rule-card ability-rule-card">
-            <div class="panel-label">${sources.length ? escapeHtml(sources.join("／")) : "特殊规则"}</div>
             <h3>${escapeHtml(ability.name)}</h3>
             <p>${escapeHtml(ability.description)}</p>
           </article>
-        `;
-      }).join("")}
+        `).join("") : `<p class="empty-state">尚未解锁包含关键词异能的生物因子。</p>`}
     </div>
   `;
 }
@@ -513,7 +523,7 @@ function renderGameRuleArchive() {
   return `
     <div class="rules-intro">
       <strong>默认规则与基础概率</strong>
-      <span>数值均为当前正式实现；领土、异能、结界和测试模式可以在此基础上产生修正。</span>
+      <span>这里记录游戏系统的基础规则与默认数值。</span>
     </div>
     <div class="rules-card-grid">
       ${GAME_RULE_ARCHIVE.map((rule) => `
@@ -718,7 +728,7 @@ app.innerHTML = `
             <div data-achievements>${renderAchievements(loadedState ?? displayState)}</div>
           </article>
           <article class="panel archive-panel" data-archive-panel="abilities" hidden>
-            ${renderNamedAbilityArchive()}
+            <div data-keyword-abilities>${renderNamedAbilityArchive(loadedState ?? displayState)}</div>
           </article>
           <article class="panel archive-panel" data-archive-panel="rules" hidden>
             ${renderGameRuleArchive()}
@@ -1538,33 +1548,13 @@ function renderBiofactorAbilityDetails(content) {
     <span class="biofactor-ability-details">
       ${abilityIds
         .map((abilityId) => {
-          const ability = ABILITIES[abilityId];
+          const ability = getAbilityDefinition(abilityId);
           const abilityName = ability?.name ?? "未知异能";
           return `<span><strong>${escapeHtml(abilityName)}</strong>：${escapeHtml(ability?.description ?? "暂无具体说明。")}</span>`;
         })
         .join("")}
     </span>
   `;
-}
-
-function getAbilitySourceLabel(abilityId, race, job) {
-  const sources = [];
-  if (race?.abilities?.includes(abilityId)) sources.push(race.name);
-  if (job?.abilities?.includes(abilityId)) sources.push(job.name);
-
-  const componentCounts = new Map();
-  for (const placement of blueprintDraft.placements ?? []) {
-    const component = getComponent(placement.contentId);
-    if (!component?.abilities?.includes(abilityId)) continue;
-    componentCounts.set(
-      component.name,
-      (componentCounts.get(component.name) ?? 0) + 1,
-    );
-  }
-  for (const [name, count] of componentCounts) {
-    sources.push(count > 1 ? `${name}×${count}` : name);
-  }
-  return sources.join("、") || "未知来源";
 }
 
 function getBiofactorFilterState(root) {
@@ -1763,9 +1753,17 @@ function renderLegendaryPrototypeEditor(state) {
     })
     .join("");
   const abilities = blueprint.abilityDetails
+    .filter((ability) => !ability.special)
     .map(
       ({ name, description }) =>
-        `<li><strong>[${escapeHtml(name ?? "未知异能")}]</strong><span>${escapeHtml(description ?? "暂无具体说明。")}</span><em>来源：传奇蓝图或已安装因子</em></li>`,
+        `<li><strong>[${escapeHtml(name ?? "未知异能")}]</strong><span>${escapeHtml(description ?? "暂无具体说明。")}</span></li>`,
+    )
+    .join("") || `<li><span>无衍生异能</span></li>`;
+  const specialAbilities = blueprint.abilityDetails
+    .filter((ability) => ability.special)
+    .map(
+      ({ name, description }) =>
+        `<li><strong>[${escapeHtml(name ?? "未知专属能力")}]</strong><span>${escapeHtml(description ?? "暂无具体说明。")}</span></li>`,
     )
     .join("");
 
@@ -1831,6 +1829,7 @@ function renderLegendaryPrototypeEditor(state) {
         </tbody></table>
         <div class="panel-label ability-heading">衍生异能</div>
         <ul class="ability-list">${abilities}</ul>
+        ${specialAbilities ? `<div class="panel-label ability-heading">专属能力</div><ul class="ability-list">${specialAbilities}</ul>` : ""}
         ${blueprint.issues.length ? `<div class="validation-list">${blueprint.issues.map((issue) => `<p>! ${escapeHtml(issue)}</p>`).join("")}</div>` : `<div class="validation-ok">✓ 身份锁定、拓展格与因子配置均合法</div>`}
         <p class="dialog-message ${prototypeMessageIsError ? "is-error" : ""}" role="status">${escapeHtml(prototypeMessage)}</p>
         <p class="field-help">传奇蓝图的因子变更会立即保存。${editable ? "" : "当前状态不可编辑。"}</p>
@@ -2073,17 +2072,20 @@ function renderPrototypeEditor(state, force = false) {
         .join("")
     : `<p class="empty-state">尚未安装装备或改造。点击左侧因子即可自动放入合法空位。</p>`;
 
-  const abilities = result.abilityDetails.length
-    ? result.abilityDetails
-        .map(
-          ({ id, name, description }) => {
-            const displayName = `[${name ?? "未知异能"}]`;
-            const source = getAbilitySourceLabel(id, race, job);
-            return `<li><strong>${displayName}</strong><span>${description}</span><em>来源：${escapeHtml(source)}</em></li>`;
-          },
-        )
-        .join("")
-    : `<li><span>无衍生异能</span></li>`;
+  const abilities = result.abilityDetails
+    .filter((ability) => !ability.special)
+    .map(
+      ({ name, description }) =>
+        `<li><strong>[${escapeHtml(name ?? "未知异能")}]</strong><span>${escapeHtml(description ?? "暂无具体说明。")}</span></li>`,
+    )
+    .join("") || `<li><span>无衍生异能</span></li>`;
+  const specialAbilities = result.abilityDetails
+    .filter((ability) => ability.special)
+    .map(
+      ({ name, description }) =>
+        `<li><strong>[${escapeHtml(name ?? "未知专属能力")}]</strong><span>${escapeHtml(description ?? "暂无具体说明。")}</span></li>`,
+    )
+    .join("");
 
   const blueprintCards = state.blueprints.length
     ? state.blueprints
@@ -2396,6 +2398,7 @@ function renderPrototypeEditor(state, force = false) {
         </table>
         <div class="panel-label ability-heading">衍生异能</div>
         <ul class="ability-list">${abilities}</ul>
+        ${specialAbilities ? `<div class="panel-label ability-heading">专属能力</div><ul class="ability-list">${specialAbilities}</ul>` : ""}
         ${
           result.issues.length
             ? `<div class="validation-list">${result.issues.map((issue) => `<p>! ${issue}</p>`).join("")}</div>`
@@ -4433,7 +4436,7 @@ function renderExpeditionScreen(state, force = false) {
         ${
           expedition.legendaryActionWindow
               ? `<div class="execution-warning">
-                <strong>传奇异能窗口：血色邀宴</strong>
+                <strong>专属能力窗口：血色邀宴</strong>
                 <span>下一回合到来前可支付2 LP，对当前目标造成2点直接生命伤害，并获得1点远征临时生命（最多3点）；战斗不会为选择暂停。</span>
                 <div class="inline-actions">
                   <button class="terminal-button warning" data-activate-olivia-blood-feast>发动 · 2 LP</button>
@@ -4631,6 +4634,10 @@ function updateStateUI(state) {
   }
   const achievements = document.querySelector("[data-achievements]");
   if (achievements) achievements.innerHTML = renderAchievements(state);
+  const keywordAbilities = document.querySelector("[data-keyword-abilities]");
+  if (keywordAbilities) {
+    keywordAbilities.innerHTML = renderNamedAbilityArchive(state);
+  }
   setArchiveTab(activeArchiveTab);
 
   setAllText("[data-game-id]", `GAME ID: ${state.gameId}`);

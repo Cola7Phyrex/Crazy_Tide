@@ -1,4 +1,4 @@
-import { ABILITIES } from "../data/prototype-data.js";
+import { getAbilityDefinition } from "../data/prototype-data.js";
 
 const STAT_LABELS = {
   power: "力量",
@@ -53,11 +53,11 @@ export function getBiofactorEffectItems(content) {
     }
   }
   for (const abilityId of content?.abilities ?? []) {
-    const ability = ABILITIES[abilityId];
+    const ability = getAbilityDefinition(abilityId);
     const abilityName = ability?.name ?? "未知异能";
     items.push({
       tag: "ABILITY",
-      label: `异能：${abilityName}`,
+      label: `${ability?.special ? "专属能力" : "异能"}：${abilityName}`,
     });
   }
   for (const [field, value] of Object.entries(
@@ -93,8 +93,8 @@ export function getBiofactorSearchText(content) {
   const abilityText = (content?.abilities ?? [])
     .flatMap((id) => [
       id,
-      ABILITIES[id]?.name ?? "",
-      ABILITIES[id]?.description ?? "",
+      getAbilityDefinition(id)?.name ?? "",
+      getAbilityDefinition(id)?.description ?? "",
     ])
     .join(" ");
   return [
