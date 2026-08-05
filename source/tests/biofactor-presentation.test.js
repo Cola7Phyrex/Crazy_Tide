@@ -4,10 +4,12 @@ import {
   getBiofactorEffectItems,
   getBiofactorEffectTags,
   getBiofactorRequirementSummary,
+  hasVisibleAbilityTitle,
   matchesBiofactorFilters,
 } from "../src/systems/biofactor-presentation.js";
 import {
   BIOFACTOR_TYPES,
+  ABILITIES,
   getComponent,
   getRace,
 } from "../src/data/prototype-data.js";
@@ -24,10 +26,28 @@ test("生物因子效果摘要由权威属性、异能和字段变化自动生�
   assert.ok(getBiofactorEffectTags(shield).includes("DEFENSE"));
   assert.ok(getBiofactorEffectTags(shield).includes("ABILITY"));
   assert.deepEqual(
+    getBiofactorEffectItems(shield).map((item) => item.label),
+    ["防御+1"],
+  );
+  assert.deepEqual(
     getBiofactorEffectItems(brain).map((item) => item.label),
     ["智力→有"],
   );
   assert.equal(getBiofactorRequirementSummary(brain), "");
+});
+
+test("编号异能不显示内部标题但仍保留异能筛选标签", () => {
+  const warrior = {
+    stats: { power: 0, defense: 1, hp: 1 },
+    abilities: ["ABILITY_001"],
+  };
+  assert.equal(hasVisibleAbilityTitle(ABILITIES.ABILITY_001), false);
+  assert.deepEqual(
+    getBiofactorEffectItems(warrior).map((item) => item.label),
+    ["防御+1", "生命+1"],
+  );
+  assert.ok(getBiofactorEffectTags(warrior).includes("ABILITY"));
+  assert.equal(hasVisibleAbilityTitle(ABILITIES.ABILITY_FLYING), true);
 });
 
 test("生物因子搜索可命中名称、ID、类别和异能效果", () => {

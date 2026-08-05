@@ -32,6 +32,10 @@ function formatFieldValue(value) {
   return String(value);
 }
 
+export function hasVisibleAbilityTitle(ability) {
+  return Boolean(ability?.keyword === true || ability?.special === true);
+}
+
 export function isLegendaryBiofactor(content) {
   return Boolean(
     content?.legendary === true ||
@@ -54,6 +58,7 @@ export function getBiofactorEffectItems(content) {
   }
   for (const abilityId of content?.abilities ?? []) {
     const ability = getAbilityDefinition(abilityId);
+    if (!hasVisibleAbilityTitle(ability)) continue;
     const abilityName = ability?.name ?? "未知异能";
     items.push({
       tag: "ABILITY",
@@ -75,7 +80,9 @@ export function getBiofactorEffectItems(content) {
 }
 
 export function getBiofactorEffectTags(content) {
-  return [...new Set(getBiofactorEffectItems(content).map((item) => item.tag))];
+  const tags = getBiofactorEffectItems(content).map((item) => item.tag);
+  if (content?.abilities?.length) tags.push("ABILITY");
+  return [...new Set(tags)];
 }
 
 export function getBiofactorRequirementSummary(content) {

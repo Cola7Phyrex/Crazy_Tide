@@ -109,6 +109,7 @@ import {
   getBiofactorEffectTags,
   getBiofactorRequirementSummary,
   getBiofactorSearchText,
+  hasVisibleAbilityTitle,
 } from "./systems/biofactor-presentation.js";
 import { isEmptyStandbyLegion } from "./systems/prototypes.js";
 import {
@@ -1550,7 +1551,12 @@ function renderBiofactorAbilityDetails(content) {
         .map((abilityId) => {
           const ability = getAbilityDefinition(abilityId);
           const abilityName = ability?.name ?? "未知异能";
-          return `<span><strong>${escapeHtml(abilityName)}</strong>：${escapeHtml(ability?.description ?? "暂无具体说明。")}</span>`;
+          const description = escapeHtml(
+            ability?.description ?? "暂无具体说明。",
+          );
+          return hasVisibleAbilityTitle(ability)
+            ? `<span><strong>${escapeHtml(abilityName)}</strong>：${description}</span>`
+            : `<span>${description}</span>`;
         })
         .join("")}
     </span>
@@ -1755,8 +1761,8 @@ function renderLegendaryPrototypeEditor(state) {
   const abilities = blueprint.abilityDetails
     .filter((ability) => !ability.special)
     .map(
-      ({ name, description }) =>
-        `<li><strong>[${escapeHtml(name ?? "未知异能")}]</strong><span>${escapeHtml(description ?? "暂无具体说明。")}</span></li>`,
+      (ability) =>
+        `<li>${hasVisibleAbilityTitle(ability) ? `<strong>[${escapeHtml(ability.name ?? "未知异能")}]</strong>` : ""}<span>${escapeHtml(ability.description ?? "暂无具体说明。")}</span></li>`,
     )
     .join("") || `<li><span>无衍生异能</span></li>`;
   const specialAbilities = blueprint.abilityDetails
@@ -2075,8 +2081,8 @@ function renderPrototypeEditor(state, force = false) {
   const abilities = result.abilityDetails
     .filter((ability) => !ability.special)
     .map(
-      ({ name, description }) =>
-        `<li><strong>[${escapeHtml(name ?? "未知异能")}]</strong><span>${escapeHtml(description ?? "暂无具体说明。")}</span></li>`,
+      (ability) =>
+        `<li>${hasVisibleAbilityTitle(ability) ? `<strong>[${escapeHtml(ability.name ?? "未知异能")}]</strong>` : ""}<span>${escapeHtml(ability.description ?? "暂无具体说明。")}</span></li>`,
     )
     .join("") || `<li><span>无衍生异能</span></li>`;
   const specialAbilities = result.abilityDetails
